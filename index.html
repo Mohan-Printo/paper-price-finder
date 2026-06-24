@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paper Price Finder</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0efe9;
+      --border: rgba(0,0,0,0.1);
+      --border2: rgba(0,0,0,0.2);
+      --text: #1a1a18;
+      --text2: #666660;
+      --text3: #aaa9a0;
+      --accent: #1a6fd4;
+      --accent-bg: #e8f0fb;
+      --accent-text: #0d3d7a;
+      --success: #1e7a42;
+      --success-bg: #e6f4ec;
+      --danger: #b93020;
+      --danger-bg: #fbeae7;
+      --warn: #8a5c00;
+      --warn-bg: #fdf5e0;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #181816;
+        --surface: #222220;
+        --surface2: #2c2c2a;
+        --border: rgba(255,255,255,0.09);
+        --border2: rgba(255,255,255,0.18);
+        --text: #f0efe8;
+        --text2: #aaa99a;
+        --text3: #666660;
+        --accent: #5b9de8;
+        --accent-bg: #162040;
+        --accent-text: #92bef5;
+        --success: #4ec47a;
+        --success-bg: #0c2218;
+        --danger: #e87060;
+        --danger-bg: #280e0c;
+        --warn: #e8b840;
+        --warn-bg: #281c04;
+      }
+    }
+
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600; }
+    .logo i { font-size: 20px; color: var(--accent); }
+    .free-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--success-bg); color: var(--success); font-weight: 500; }
+
+    /* Layout */
+    .page { max-width: 980px; margin: 0 auto; padding: 1.5rem; display: flex; gap: 1.25rem; align-items: flex-start; }
+    .main { flex: 1; min-width: 0; }
+    .sidebar { width: 210px; flex-shrink: 0; }
+
+    /* Setup box */
+    .setup-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .setup-box .setup-title {
+      font-size: 13px; font-weight: 600; color: var(--text2);
+      display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+    }
+    .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .key-row input {
+      flex: 1; min-width: 200px;
+      padding: 8px 11px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      font-family: monospace;
+      outline: none;
+    }
+    .key-row input:focus { border-color: var(--accent); }
+    .btn-save {
+      padding: 8px 16px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
+    }
+    .btn-save:hover { opacity: 0.87; }
+    .key-status { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+    .key-status.ok { color: var(--success); }
+    .key-status.no { color: var(--warn); }
+    .setup-hint { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
+    .setup-hint a { color: var(--accent); text-decoration: none; }
+    .setup-hint a:hover { text-decoration: underline; }
+    .steps { font-size: 12px; color: var(--text2); margin-top: 10px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); line-height: 2; }
+    .steps b { color: var(--accent); }
+
+    /* Search card */
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .search-card h1 { font-size: 19px; font-weight: 600; margin-bottom: 3px; }
+    .search-card .sub { font-size: 13px; color: var(--text2); margin-bottom: 1.1rem; }
+
+    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+    .search-row input {
+      flex: 1;
+      padding: 10px 13px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .search-row input:focus { border-color: var(--accent); background: var(--surface); }
+    .btn-search {
+      padding: 10px 20px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+      transition: opacity .15s;
+    }
+    .btn-search:hover { opacity: 0.87; }
+    .btn-search:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      font-size: 12px; padding: 5px 11px;
+      border: 1px solid var(--border2);
+      border-radius: 99px; cursor: pointer;
+      color: var(--text2); background: var(--surface2);
+      transition: all .12s;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+    /* Status / error */
+    .status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); margin-bottom: 1rem; min-height: 22px; }
+    .spin { width: 15px; height: 15px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .err { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(185,48,32,.15); border-radius: var(--radius-sm); padding: 10px 13px; font-size: 13px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 8px; }
+
+    /* Results */
+    .results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .results-head span { font-size: 13px; color: var(--text2); font-weight: 500; }
+    .btn-csv { padding: 5px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .btn-csv:hover { border-color: var(--accent); color: var(--accent); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 12px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      display: flex; flex-direction: column;
+      transition: box-shadow .15s;
+    }
+    .card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.09); }
+
+    .c-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+    .c-name { font-size: 14px; font-weight: 600; line-height: 1.3; }
+    .c-price { font-size: 12px; font-weight: 600; background: var(--accent-bg); color: var(--accent-text); padding: 3px 9px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+    .c-div { height: 1px; background: var(--border); margin: 8px 0; }
+    .c-row { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+    .c-row i { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .c-row span { line-height: 1.45; word-break: break-word; }
+    .c-row .hi { color: var(--text); font-weight: 500; }
+    .c-note { font-size: 11px; color: var(--warn); background: var(--warn-bg); border-radius: 4px; padding: 4px 8px; margin-top: 5px; line-height: 1.4; }
+    .c-foot { margin-top: 10px; }
+    .c-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 4px 9px; text-decoration: none; }
+    .c-link:hover { background: var(--accent-bg); border-color: var(--accent); }
+
+    /* Empty */
+    .empty { text-align: center; padding: 3rem 0; color: var(--text3); }
+    .empty i { font-size: 38px; display: block; margin-bottom: 10px; opacity: .6; }
+    .empty p { font-size: 14px; }
+
+    /* Sidebar */
+    .side-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .side-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .h-item { font-size: 12px; color: var(--text2); padding: 5px 7px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: flex-start; gap: 5px; margin-bottom: 1px; line-height: 1.35; }
+    .h-item:hover { background: var(--surface2); color: var(--text); }
+    .h-item i { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
+    .h-empty { font-size: 12px; color: var(--text3); padding: 3px 7px; }
+    .btn-clear { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; margin-top: 6px; padding: 2px 7px; }
+    .btn-clear:hover { color: var(--danger); }
+
+    @media (max-width: 680px) {
+      .page { flex-direction: column; }
+      .sidebar { width: 100%; }
+      header { padding: 0 1rem; }
+      .page { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <i class="ti ti-file-description" aria-hidden="true"></i>
+    Paper Price Finder
+  </div>
+  <span class="free-badge">100% Free · No Payment</span>
+</header>
+
+<div class="page">
+  <div class="main">
+
+    <!-- Setup box -->
+    <div class="setup-box">
+      <div class="setup-title"><i class="ti ti-key" aria-hidden="true"></i> Google Gemini API Key (Free — No Credit Card)</div>
+      <div class="key-row">
+        <input type="password" id="apiKey" placeholder="AIza..."/>
+        <button class="btn-save" onclick="saveKey()">Save Key</button>
+        <span class="key-status no" id="keyStatus"><i class="ti ti-alert-circle"></i> Not set</span>
+      </div>
+      <div class="steps">
+        <b>Step 1:</b> Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a><br>
+        <b>Step 2:</b> Sign in with your Google account (Gmail)<br>
+        <b>Step 3:</b> Click <b>"Create API key"</b> → Copy it<br>
+        <b>Step 4:</b> Paste above and click <b>Save Key</b>
+      </div>
+      <div class="setup-hint">Your key is stored only on your computer (browser localStorage). Never shared anywhere.</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-card">
+      <h1>Find Paper Prices</h1>
+      <p class="sub">Enter any paper spec — get vendor names, prices, addresses &amp; contact details from across India.</p>
+      <div class="search-row">
+        <input type="text" id="qInput" placeholder="e.g. Glossy white paper 230 gsm A4"/>
+        <button class="btn-search" id="searchBtn" onclick="doSearch()">
+          <i class="ti ti-search" aria-hidden="true"></i> Find Prices
+        </button>
+      </div>
+      <div class="chips">
+        <span class="chip" onclick="quick('Glossy white paper 230 gsm A4')">Glossy white 230gsm</span>
+        <span class="chip" onclick="quick('Matte coated paper 170 gsm')">Matte coated 170gsm</span>
+        <span class="chip" onclick="quick('Bond paper 80 gsm A4')">Bond A4 80gsm</span>
+        <span class="chip" onclick="quick('Art paper 300 gsm')">Art paper 300gsm</span>
+        <span class="chip" onclick="quick('Kraft paper 120 gsm bulk')">Kraft paper 120gsm</span>
+        <span class="chip" onclick="quick('Offset printing paper 90 gsm')">Offset 90gsm</span>
+        <span class="chip" onclick="quick('Newsprint paper roll')">Newsprint roll</span>
+      </div>
+    </div>
+
+    <div class="status" id="statusBar"></div>
+    <div id="errArea"></div>
+    <div id="resArea">
+      <div class="empty">
+        <i class="ti ti-file-search" aria-hidden="true"></i>
+        <p>Search for any paper type to see vendors &amp; prices.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="side-box">
+      <div class="side-title"><i class="ti ti-history" aria-hidden="true"></i> Recent Searches</div>
+      <div id="histList"><p class="h-empty">No searches yet.</p></div>
+      <button class="btn-clear" onclick="clearHist()">Clear history</button>
+    </div>
+
+    <div class="side-box">
+      <div class="side-title"><i class="ti ti-info-circle" aria-hidden="true"></i> About this tool</div>
+      <div style="font-size:12px; color:var(--text2); line-height:1.6;">
+        Uses <b>Google Gemini 2.5 Flash</b> with live web search.<br><br>
+        <b>Free limits:</b><br>
+        • 1,500 searches/day<br>
+        • No credit card ever<br>
+        • No expiry<br><br>
+        Results are sourced live from the web — prices reflect current market listings.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let hist = JSON.parse(localStorage.getItem('ppf_hist') || '[]');
+  let lastRes = [];
+
+  window.onload = () => {
+    const k = localStorage.getItem('ppf_key');
+    if (k) { document.getElementById('apiKey').value = k; setKeyStatus(true); }
+    renderHist();
+  };
+
+  function saveKey() {
+    const k = document.getElementById('apiKey').value.trim();
+    if (!k) return alert('Please paste your Gemini API key first.');
+    localStorage.setItem('ppf_key', k);
+    setKeyStatus(true);
+  }
+
+  function setKeyStatus(ok) {
+    const el = document.getElementById('keyStatus');
+    el.className = 'key-status ' + (ok ? 'ok' : 'no');
+    el.innerHTML = ok
+      ? '<i class="ti ti-circle-check"></i> Key saved'
+      : '<i class="ti ti-alert-circle"></i> Not set';
+  }
+
+  function quick(t) { document.getElementById('qInput').value = t; doSearch(); }
+
+  async function doSearch() {
+    const q = document.getElementById('qInput').value.trim();
+    if (!q) return alert('Please type a paper specification.');
+
+    const key = localStorage.getItem('ppf_key') || document.getElementById('apiKey').value.trim();
+    if (!key) return alert('Please enter and save your Google Gemini API key first.\nGet it free at: aistudio.google.com/apikey');
+
+    const btn = document.getElementById('searchBtn');
+    const statusBar = document.getElementById('statusBar');
+    const errArea = document.getElementById('errArea');
+    const resArea = document.getElementById('resArea');
+
+    btn.disabled = true;
+    errArea.innerHTML = '';
+    resArea.innerHTML = '';
+    statusBar.innerHTML = `<div class="spin"></div> Searching for <strong>"${esc(q)}"</strong> across Indian vendors...`;
+
+    try {
+      const body = {
+        contents: [{
+          parts: [{ text: `Find Indian vendors selling: "${q}"
+Search the web now and return ONLY a JSON array — no markdown, no explanation, no backtick fences.
+Format exactly:
+[{"vendorName":"Full name","price":"Amount with unit e.g. ₹450 per ream or Contact for quote","address":"City and State","contact":"Phone or email or Not listed","website":"https://url or empty","notes":"Min order, GSM availability, etc. Empty if none"}]
+Find 4-6 vendors. Only list prices you actually found on the web. Focus on Bengaluru, Mumbai, Delhi, Chennai suppliers. Return ONLY the JSON array.` }]
+        }],
+        tools: [{ google_search: {} }],
+        generationConfig: { temperature: 0.1 }
+      };
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = data?.error?.message || `API error ${res.status}`;
+        throw new Error(msg);
+      }
+
+      const raw = (data?.candidates?.[0]?.content?.parts || [])
+        .filter(p => p.text)
+        .map(p => p.text)
+        .join('');
+
+      const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+      let vendors = [];
+      try { vendors = JSON.parse(cleaned); }
+      catch {
+        const m = cleaned.match(/\[[\s\S]*\]/);
+        if (m) vendors = JSON.parse(m[0]);
+        else throw new Error('Could not parse vendor results. Try a more specific search.');
+      }
+
+      lastRes = vendors;
+      addHist(q);
+      renderResults(vendors, q);
+      statusBar.innerHTML = `<i class="ti ti-circle-check" style="color:var(--success)"></i>&nbsp;Found <strong>${vendors.length} vendor${vendors.length!==1?'s':''}</strong> for "${esc(q)}"`;
+
+    } catch(e) {
+      statusBar.innerHTML = '';
+      errArea.innerHTML = `<div class="err"><i class="ti ti-alert-circle" style="flex-shrink:0;margin-top:1px"></i><div>${esc(e.message)}</div></div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderResults(vendors, q) {
+    const area = document.getElementById('resArea');
+    if (!vendors?.length) {
+      area.innerHTML = `<div class="empty"><i class="ti ti-mood-sad"></i><p>No vendors found for "${esc(q)}". Try different keywords.</p></div>`;
+      return;
+    }
+
+    let html = `<div class="results-head"><span>${vendors.length} vendor${vendors.length!==1?'s':''} found</span><button class="btn-csv" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Export CSV</button></div><div class="grid">`;
+
+    vendors.forEach(v => {
+      const hasUrl = v.website && v.website.trim() && v.website !== 'Not listed' && v.website.startsWith('http');
+      html += `<div class="card">
+        <div class="c-head">
+          <div class="c-name">${esc(v.vendorName||'Unknown Vendor')}</div>
+          <div class="c-price">${esc(v.price||'N/A')}</div>
+        </div>
+        <div class="c-div"></div>
+        <div class="c-row"><i class="ti ti-map-pin" aria-hidden="true"></i><span>${esc(v.address||'Not listed')}</span></div>
+        <div class="c-row"><i class="ti ti-phone" aria-hidden="true"></i><span class="${v.contact&&v.contact!=='Not listed'?'hi':''}">${esc(v.contact||'Not listed')}</span></div>
+        ${v.notes?`<div class="c-note"><i class="ti ti-info-circle" style="font-size:11px;margin-right:3px"></i>${esc(v.notes)}</div>`:''}
+        ${hasUrl?`<div class="c-foot"><a class="c-link" href="${esc(v.website)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Visit website</a></div>`:''}
+      </div>`;
+    });
+
+    area.innerHTML = html + '</div>';
+  }
+
+  function exportCSV() {
+    if (!lastRes.length) return;
+    const hdr = ['Vendor Name','Price','Address','Contact','Website','Notes'];
+    const rows = lastRes.map(v =>
+      [v.vendorName,v.price,v.address,v.contact,v.website,v.notes]
+      .map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')
+    );
+    const blob = new Blob([[hdr.join(','),...rows].join('\n')],{type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `paper_prices_${Date.now()}.csv`;
+    a.click();
+  }
+
+  function addHist(q) {
+    hist = [q,...hist.filter(h=>h!==q)].slice(0,15);
+    localStorage.setItem('ppf_hist', JSON.stringify(hist));
+    renderHist();
+  }
+
+  function renderHist() {
+    const el = document.getElementById('histList');
+    if (!hist.length) { el.innerHTML = '<p class="h-empty">No searches yet.</p>'; return; }
+    el.innerHTML = hist.map(q=>`<div class="h-item" onclick="quick(${JSON.stringify(q)})"><i class="ti ti-clock"></i>${esc(q)}</div>`).join('');
+  }
+
+  function clearHist() {
+    hist = [];
+    localStorage.removeItem('ppf_hist');
+    renderHist();
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('qInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+</script>
+</body>
+</html>
