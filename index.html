@@ -1,476 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Paper Price Finder</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MPVF · Material Price & Vendor Finder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%235B2D8E'/%3E%3Cstop offset='100%25' stop-color='%23F97316'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16' font-weight='900' font-family='Arial,sans-serif' fill='white'%3EM%3C/text%3E%3C/svg%3E"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-    :root {
-      --bg: #f5f4f0;
-      --surface: #ffffff;
-      --surface2: #f0efe9;
-      --border: rgba(0,0,0,0.1);
-      --border2: rgba(0,0,0,0.2);
-      --text: #1a1a18;
-      --text2: #666660;
-      --text3: #aaa9a0;
-      --accent: #1a6fd4;
-      --accent-bg: #e8f0fb;
-      --accent-text: #0d3d7a;
-      --success: #1e7a42;
-      --success-bg: #e6f4ec;
-      --danger: #b93020;
-      --danger-bg: #fbeae7;
-      --warn: #8a5c00;
-      --warn-bg: #fdf5e0;
-      --radius: 10px;
-      --radius-sm: 6px;
-    }
+:root{
+  /* Printo palette */
+  --purple:#5B2D8E;
+  --purple-light:#7B3DB8;
+  --purple-pale:#F3EEFA;
+  --purple-mid:#EDE0F8;
+  --orange:#F97316;
+  --orange-light:#FB923C;
+  --orange-pale:#FFF4ED;
+  /* Neutrals */
+  --bg:#F8F6FB;
+  --surface:#FFFFFF;
+  --surface2:#F3EEFA;
+  --surface3:#EDE0F8;
+  --border:rgba(91,45,142,0.12);
+  --border2:rgba(91,45,142,0.22);
+  --text:#1E0A3C;
+  --text2:#6B5B8A;
+  --text3:#A694C0;
+  /* Semantic */
+  --success:#16A34A;
+  --success-bg:#DCFCE7;
+  --danger:#DC2626;
+  --danger-bg:#FEE2E2;
+  --warn:#D97706;
+  --warn-bg:#FEF3C7;
+  --r:10px;--rsm:7px;
+}
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #181816;
-        --surface: #222220;
-        --surface2: #2c2c2a;
-        --border: rgba(255,255,255,0.09);
-        --border2: rgba(255,255,255,0.18);
-        --text: #f0efe8;
-        --text2: #aaa99a;
-        --text3: #666660;
-        --accent: #5b9de8;
-        --accent-bg: #162040;
-        --accent-text: #92bef5;
-        --success: #4ec47a;
-        --success-bg: #0c2218;
-        --danger: #e87060;
-        --danger-bg: #280e0c;
-        --warn: #e8b840;
-        --warn-bg: #281c04;
-      }
-    }
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+/* ── Subtle bg pattern ── */
+.bg-pattern{position:fixed;inset:0;z-index:0;background-image:radial-gradient(circle,rgba(91,45,142,0.04) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+.bg-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;}
+.bg-orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(91,45,142,0.07) 0%,transparent 70%);top:-180px;left:-180px;animation:orbF1 14s ease-in-out infinite;}
+.bg-orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 70%);bottom:-120px;right:-120px;animation:orbF2 18s ease-in-out infinite;}
+@keyframes orbF1{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,20px);}}
+@keyframes orbF2{0%,100%{transform:translate(0,0);}50%{transform:translate(-20px,-30px);}}
 
-    /* Header */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 1.5rem;
-      height: 54px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .logo { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600; }
-    .logo i { font-size: 20px; color: var(--accent); }
-    .free-badge { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--success-bg); color: var(--success); font-weight: 500; }
+/* ── Splash ── */
+#splash{position:fixed;inset:0;z-index:1000;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s ease,visibility .5s;}
+#splash.hide{opacity:0;visibility:hidden;}
+.splash-ring{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--orange));display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;animation:splashBounce 1.4s ease-in-out infinite;}
+.splash-title{font-size:20px;font-weight:800;color:var(--purple);letter-spacing:-.3px;}
+.splash-title span{color:var(--orange);}
+.splash-sub{font-size:12px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;}
+.splash-bar{width:180px;height:3px;background:var(--purple-mid);border-radius:99px;overflow:hidden;}
+.splash-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--orange));animation:splashLoad 2s ease-in-out forwards;}
+@keyframes splashBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+@keyframes splashLoad{0%{width:0%;}100%{width:100%;}}
 
-    /* Layout */
-    .page { max-width: 980px; margin: 0 auto; padding: 1.5rem; display: flex; gap: 1.25rem; align-items: flex-start; }
-    .main { flex: 1; min-width: 0; }
-    .sidebar { width: 210px; flex-shrink: 0; }
+/* ── Header ── */
+header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 1.5rem;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:11px;}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--purple),var(--purple-light));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;box-shadow:0 2px 8px rgba(91,45,142,0.25);}
+.logo-text{font-size:15px;font-weight:800;color:var(--purple);}
+.logo-text span{color:var(--orange);}
+.logo-tag{font-size:10px;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:8px;}
+.hdr-btn{width:36px;height:36px;border-radius:9px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .2s;position:relative;}
+.hdr-btn:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+.hdr-btn.active{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+.key-dot{width:7px;height:7px;border-radius:50%;position:absolute;top:6px;right:6px;}
+.key-dot.ok{background:var(--success);}
+.key-dot.no{background:var(--orange);}
 
-    /* Setup box */
-    .setup-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.25rem;
-    }
-    .setup-box .setup-title {
-      font-size: 13px; font-weight: 600; color: var(--text2);
-      display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
-    }
-    .key-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .key-row input {
-      flex: 1; min-width: 200px;
-      padding: 8px 11px;
-      border: 1px solid var(--border2);
-      border-radius: var(--radius-sm);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 13px;
-      font-family: monospace;
-      outline: none;
-    }
-    .key-row input:focus { border-color: var(--accent); }
-    .btn-save {
-      padding: 8px 16px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius-sm);
-      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;
-    }
-    .btn-save:hover { opacity: 0.87; }
-    .key-status { font-size: 12px; display: flex; align-items: center; gap: 4px; }
-    .key-status.ok { color: var(--success); }
-    .key-status.no { color: var(--warn); }
-    .setup-hint { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
-    .setup-hint a { color: var(--accent); text-decoration: none; }
-    .setup-hint a:hover { text-decoration: underline; }
-    .steps { font-size: 12px; color: var(--text2); margin-top: 10px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); line-height: 2; }
-    .steps b { color: var(--accent); }
+/* ── Views ── */
+.view{position:relative;z-index:1;display:none;}
+.view.active{display:block;}
 
-    /* Search card */
-    .search-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-    }
-    .search-card h1 { font-size: 19px; font-weight: 600; margin-bottom: 3px; }
-    .search-card .sub { font-size: 13px; color: var(--text2); margin-bottom: 1.1rem; }
+/* ── Layout ── */
+.page{max-width:1060px;margin:0 auto;padding:1.5rem;display:flex;gap:1.5rem;align-items:flex-start;}
+.main{flex:1;min-width:0;}
+.sidebar{width:220px;flex-shrink:0;}
 
-    .search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
-    .search-row input {
-      flex: 1;
-      padding: 10px 13px;
-      border: 1px solid var(--border2);
-      border-radius: var(--radius-sm);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 15px;
-      outline: none;
-      transition: border-color .15s;
-    }
-    .search-row input:focus { border-color: var(--accent); background: var(--surface); }
-    .btn-search {
-      padding: 10px 20px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius-sm);
-      font-size: 14px; font-weight: 500;
-      cursor: pointer; white-space: nowrap;
-      display: flex; align-items: center; gap: 6px;
-      transition: opacity .15s;
-    }
-    .btn-search:hover { opacity: 0.87; }
-    .btn-search:disabled { opacity: 0.4; cursor: not-allowed; }
+/* ── Hero ── */
+.hero{padding:1.75rem 0 1.25rem;text-align:center;}
+.hero h1{font-size:26px;font-weight:800;color:var(--purple);margin-bottom:5px;letter-spacing:-.4px;}
+.hero h1 span{color:var(--orange);}
+.hero p{font-size:13px;color:var(--text2);}
 
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip {
-      font-size: 12px; padding: 5px 11px;
-      border: 1px solid var(--border2);
-      border-radius: 99px; cursor: pointer;
-      color: var(--text2); background: var(--surface2);
-      transition: all .12s;
-    }
-    .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+/* ── No key banner ── */
+.no-key-banner{background:var(--orange-pale);border:1px solid rgba(249,115,22,.25);border-radius:10px;padding:11px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--orange);margin-bottom:1.25rem;cursor:pointer;transition:all .2s;}
+.no-key-banner:hover{background:#FFE8D5;}
+.no-key-banner i{flex-shrink:0;}
 
-    /* Status / error */
-    .status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); margin-bottom: 1rem; min-height: 22px; }
-    .spin { width: 15px; height: 15px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .err { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(185,48,32,.15); border-radius: var(--radius-sm); padding: 10px 13px; font-size: 13px; margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 8px; }
+/* ── Search card ── */
+.search-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden;box-shadow:0 1px 6px rgba(91,45,142,0.07);}
+.search-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--orange));}
 
-    /* Results */
-    .results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .results-head span { font-size: 13px; color: var(--text2); font-weight: 500; }
-    .btn-csv { padding: 5px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); color: var(--text2); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-    .btn-csv:hover { border-color: var(--accent); color: var(--accent); }
+.search-input-wrap{position:relative;margin-bottom:1rem;}
+.search-input-wrap .si-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px;pointer-events:none;}
+.search-input-wrap input{width:100%;padding:13px 140px 13px 44px;border:1.5px solid var(--border2);border-radius:10px;background:#FAFAFA;color:var(--text);font-size:15px;outline:none;transition:all .2s;}
+.search-input-wrap input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(91,45,142,0.1);background:var(--surface);}
+.search-input-wrap input::placeholder{color:var(--text3);}
+.btn-search{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:8px 18px;background:linear-gradient(135deg,var(--purple),var(--purple-light));color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap;box-shadow:0 2px 8px rgba(91,45,142,0.3);}
+.btn-search:hover{background:linear-gradient(135deg,var(--purple-light),var(--purple));box-shadow:0 4px 14px rgba(91,45,142,0.35);}
+.btn-search:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;}
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 12px; }
+/* City filter */
+.filter-row{display:flex;align-items:center;gap:7px;margin-bottom:1rem;flex-wrap:wrap;}
+.filter-label{font-size:12px;color:var(--text2);font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.city-btn{font-size:12px;padding:5px 13px;border:1.5px solid var(--border2);border-radius:99px;cursor:pointer;color:var(--text2);background:var(--surface);transition:all .15s;font-weight:500;}
+.city-btn:hover{border-color:var(--purple);color:var(--purple);}
+.city-btn.active{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);font-weight:700;}
 
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.2rem;
-      display: flex; flex-direction: column;
-      transition: box-shadow .15s;
-    }
-    .card:hover { box-shadow: 0 3px 12px rgba(0,0,0,.09); }
+/* Quick chips */
+.chips-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;font-weight:600;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:99px;cursor:pointer;color:var(--text2);background:var(--purple-pale);transition:all .15s;}
+.chip:hover{border-color:var(--orange);color:var(--orange);background:var(--orange-pale);}
 
-    .c-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
-    .c-name { font-size: 14px; font-weight: 600; line-height: 1.3; }
-    .c-price { font-size: 12px; font-weight: 600; background: var(--accent-bg); color: var(--accent-text); padding: 3px 9px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
-    .c-div { height: 1px; background: var(--border); margin: 8px 0; }
-    .c-row { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
-    .c-row i { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-    .c-row span { line-height: 1.45; word-break: break-word; }
-    .c-row .hi { color: var(--text); font-weight: 500; }
-    .c-note { font-size: 11px; color: var(--warn); background: var(--warn-bg); border-radius: 4px; padding: 4px 8px; margin-top: 5px; line-height: 1.4; }
-    .c-foot { margin-top: 10px; }
-    .c-link { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 4px 9px; text-decoration: none; }
-    .c-link:hover { background: var(--accent-bg); border-color: var(--accent); }
+/* ── Status ── */
+.status-bar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:1rem;min-height:24px;padding:0 2px;}
+.spin{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-    /* Empty */
-    .empty { text-align: center; padding: 3rem 0; color: var(--text3); }
-    .empty i { font-size: 38px; display: block; margin-bottom: 10px; opacity: .6; }
-    .empty p { font-size: 14px; }
+/* Scanning */
+.scan-wrap{display:flex;flex-direction:column;align-items:center;padding:2.5rem 1rem;gap:14px;}
+.scan-ring{width:64px;height:64px;border-radius:50%;border:2px solid var(--border2);position:relative;display:flex;align-items:center;justify-content:center;background:var(--purple-pale);}
+.scan-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:2.5px solid transparent;border-top-color:var(--purple);border-right-color:var(--orange);animation:spin .9s linear infinite;}
+.scan-ring i{font-size:24px;color:var(--purple);}
+.scan-text{font-size:14px;color:var(--text2);font-weight:500;}
+.scan-steps{display:flex;flex-direction:column;gap:5px;width:100%;max-width:260px;}
+.scan-step{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:7px;padding:4px 0;}
+.scan-step.done{color:var(--success);}
+.scan-step.active{color:var(--purple);font-weight:600;}
 
-    /* Sidebar */
-    .side-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .side-title { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
-    .h-item { font-size: 12px; color: var(--text2); padding: 5px 7px; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: flex-start; gap: 5px; margin-bottom: 1px; line-height: 1.35; }
-    .h-item:hover { background: var(--surface2); color: var(--text); }
-    .h-item i { flex-shrink: 0; margin-top: 2px; font-size: 12px; }
-    .h-empty { font-size: 12px; color: var(--text3); padding: 3px 7px; }
-    .btn-clear { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; margin-top: 6px; padding: 2px 7px; }
-    .btn-clear:hover { color: var(--danger); }
+.err{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(220,38,38,.2);border-radius:var(--rsm);padding:10px 14px;font-size:13px;margin-bottom:1rem;display:flex;align-items:flex-start;gap:8px;}
 
-    @media (max-width: 680px) {
-      .page { flex-direction: column; }
-      .sidebar { width: 100%; }
-      header { padding: 0 1rem; }
-      .page { padding: 1rem; }
-    }
-  </style>
+/* ── Results ── */
+.results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.results-count{font-size:13px;color:var(--text2);font-weight:500;display:flex;align-items:center;gap:7px;}
+.results-count .badge{background:linear-gradient(135deg,var(--purple),var(--orange));color:#fff;font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;}
+.btn-csv{padding:6px 14px;border:1.5px solid var(--border2);border-radius:var(--rsm);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;}
+.btn-csv:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;display:flex;flex-direction:column;transition:all .2s;animation:cardIn .3s ease both;box-shadow:0 1px 4px rgba(91,45,142,0.06);}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 6px 20px rgba(91,45,142,0.12);}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.c-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.c-name{font-size:14px;font-weight:700;line-height:1.3;color:var(--text);}
+.c-price{font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--purple-pale),var(--orange-pale));color:var(--purple);border:1px solid rgba(91,45,142,.2);padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+.c-div{height:1px;background:var(--border);margin:8px 0;}
+.c-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);margin-bottom:6px;}
+.c-row i{font-size:14px;flex-shrink:0;margin-top:1px;color:var(--text3);}
+.c-row span{line-height:1.45;word-break:break-word;}
+.c-row span.hi{color:var(--purple);font-weight:600;}
+.c-note{font-size:11px;color:var(--warn);background:var(--warn-bg);border:1px solid rgba(217,119,6,.15);border-radius:6px;padding:5px 9px;margin-top:6px;line-height:1.4;}
+.c-foot{margin-top:10px;}
+.c-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--purple);border:1.5px solid rgba(91,45,142,.2);border-radius:var(--rsm);padding:4px 10px;text-decoration:none;font-weight:500;transition:all .15s;}
+.c-link:hover{background:var(--purple-pale);border-color:var(--purple);}
+
+/* ── Sidebar ── */
+.side-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(91,45,142,0.05);}
+.side-title{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.8px;}
+.h-item{font-size:12px;color:var(--text2);padding:6px 8px;border-radius:var(--rsm);cursor:pointer;display:flex;align-items:flex-start;gap:6px;margin-bottom:1px;transition:all .12s;line-height:1.35;}
+.h-item:hover{background:var(--purple-pale);color:var(--purple);}
+.h-item i{flex-shrink:0;margin-top:2px;font-size:12px;color:var(--text3);}
+.h-empty{font-size:12px;color:var(--text3);padding:4px 8px;}
+.btn-clear{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;margin-top:6px;padding:2px 8px;font-weight:500;}
+.btn-clear:hover{color:var(--danger);}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);}
+.empty-icon{font-size:44px;display:block;margin-bottom:12px;opacity:.35;color:var(--purple);}
+.empty p{font-size:14px;line-height:1.7;color:var(--text2);}
+
+/* ── Settings ── */
+.settings-page{max-width:660px;margin:0 auto;padding:2rem 1.5rem;}
+.settings-header{margin-bottom:2rem;}
+.settings-header h2{font-size:22px;font-weight:800;color:var(--purple);margin-bottom:4px;}
+.settings-header p{font-size:13px;color:var(--text2);}
+
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 1px 5px rgba(91,45,142,0.06);position:relative;overflow:hidden;}
+.settings-section::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:linear-gradient(180deg,var(--purple),var(--orange));}
+.settings-section{padding-left:1.75rem;}
+.sec-title{font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.7px;margin-bottom:1.1rem;display:flex;align-items:center;gap:7px;}
+
+.field{margin-bottom:1rem;}
+.field label{font-size:12px;color:var(--text2);font-weight:600;display:block;margin-bottom:6px;}
+.field input{width:100%;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--rsm);background:#FAFAFA;color:var(--text);font-size:13px;font-family:monospace;outline:none;transition:all .2s;}
+.field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(91,45,142,0.1);}
+
+.key-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+.btn-primary{padding:9px 20px;background:linear-gradient(135deg,var(--purple),var(--purple-light));color:#fff;border:none;border-radius:var(--rsm);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(91,45,142,0.3);transition:all .2s;}
+.btn-primary:hover{box-shadow:0 4px 14px rgba(91,45,142,.35);opacity:.9;}
+.btn-danger{padding:9px 16px;background:var(--danger-bg);color:var(--danger);border:1px solid rgba(220,38,38,.2);border-radius:var(--rsm);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.btn-danger:hover{background:rgba(220,38,38,.15);}
+.key-status-lg{font-size:13px;display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:var(--rsm);font-weight:500;}
+.key-status-lg.ok{background:var(--success-bg);color:var(--success);border:1px solid rgba(22,163,74,.2);}
+.key-status-lg.no{background:var(--orange-pale);color:var(--orange);border:1px solid rgba(249,115,22,.25);}
+
+.setup-steps{display:flex;flex-direction:column;gap:10px;margin-top:.5rem;}
+.step-item{display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:var(--purple-pale);border-radius:var(--rsm);}
+.step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--orange));color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:13px;color:var(--text2);line-height:1.5;}
+.step-text a{color:var(--purple);text-decoration:none;font-weight:600;}
+.step-text a:hover{text-decoration:underline;}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.info-item{background:var(--purple-pale);border-radius:var(--rsm);padding:12px 14px;border:1px solid var(--border);}
+.info-item .val{font-size:20px;font-weight:800;color:var(--purple);margin-bottom:2px;}
+.info-item .lbl{font-size:11px;color:var(--text3);font-weight:500;}
+
+@media(max-width:720px){
+  .page{flex-direction:column;}
+  .sidebar{width:100%;}
+  header{padding:0 1rem;}
+  .page{padding:1rem;}
+  .hero h1{font-size:20px;}
+  .btn-search{position:static;transform:none;width:100%;justify-content:center;margin-top:8px;padding:11px;}
+  .search-input-wrap input{padding-right:14px;}
+}
+</style>
 </head>
 <body>
 
+<div class="bg-pattern"></div>
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="splash-ring"><i class="ti ti-receipt-2"></i></div>
+  <div class="splash-title">Material Price &amp; <span>Vendor Finder</span></div>
+  <div class="splash-sub">Powered by Printo</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- Header -->
 <header>
   <div class="logo">
-    <i class="ti ti-file-description" aria-hidden="true"></i>
-    Paper Price Finder
+    <div class="logo-icon"><i class="ti ti-receipt-2"></i></div>
+    <div>
+      <div class="logo-text">Material Price &amp; <span>Vendor</span> Finder</div>
+      <div class="logo-tag">Live web search · India</div>
+    </div>
   </div>
-  <span class="free-badge">100% Free · No Payment</span>
+  <div class="header-right">
+    <button class="hdr-btn active" id="btnHome" onclick="showView('home')" title="Home"><i class="ti ti-home"></i></button>
+    <button class="hdr-btn" id="btnSettings" onclick="showView('settings')" title="Settings">
+      <i class="ti ti-settings"></i>
+      <span class="key-dot no" id="keyDot"></span>
+    </button>
+  </div>
 </header>
 
+<!-- HOME -->
+<div class="view active" id="viewHome">
 <div class="page">
   <div class="main">
 
-    <!-- Setup box -->
-    <div class="setup-box">
-      <div class="setup-title"><i class="ti ti-key" aria-hidden="true"></i> Google Gemini API Key (Free — No Credit Card)</div>
-      <div class="key-row">
-        <input type="password" id="apiKey" placeholder="AIza..."/>
-        <button class="btn-save" onclick="saveKey()">Save Key</button>
-        <span class="key-status no" id="keyStatus"><i class="ti ti-alert-circle"></i> Not set</span>
-      </div>
-      <div class="steps">
-        <b>Step 1:</b> Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a><br>
-        <b>Step 2:</b> Sign in with your Google account (Gmail)<br>
-        <b>Step 3:</b> Click <b>"Create API key"</b> → Copy it<br>
-        <b>Step 4:</b> Paste above and click <b>Save Key</b>
-      </div>
-      <div class="setup-hint">Your key is stored only on your computer (browser localStorage). Never shared anywhere.</div>
+    <div class="hero">
+      <h1>Find Any Material · Any Vendor · <span>Best Price</span></h1>
+      <p>Search paper, consumables, packaging &amp; more — live vendor prices across India</p>
     </div>
 
-    <!-- Search -->
+    <div class="no-key-banner" id="noKeyBanner" onclick="showView('settings')" style="display:none;">
+      <i class="ti ti-alert-triangle" style="font-size:18px;"></i>
+      <span>Gemini API key not set. Click here to add it in Settings — it's free!</span>
+      <i class="ti ti-chevron-right" style="margin-left:auto;"></i>
+    </div>
+
     <div class="search-card">
-      <h1>Find Paper Prices</h1>
-      <p class="sub">Enter any paper spec — get vendor names, prices, addresses &amp; contact details from across India.</p>
-      <div class="search-row">
-        <input type="text" id="qInput" placeholder="e.g. Glossy white paper 230 gsm A4"/>
+      <div class="search-input-wrap">
+        <i class="ti ti-search si-icon"></i>
+        <input type="text" id="qInput" placeholder="e.g. Glossy white paper 230 gsm A4, Kraft paper 120gsm, HP Pendrive 64GB…"/>
         <button class="btn-search" id="searchBtn" onclick="doSearch()">
-          <i class="ti ti-search" aria-hidden="true"></i> Find Prices
+          <i class="ti ti-sparkles"></i> Find Prices
         </button>
       </div>
+
+      <!-- City filter -->
+      <div class="filter-row">
+        <span class="filter-label"><i class="ti ti-map-pin" style="font-size:13px;color:var(--purple)"></i> City:</span>
+        <button class="city-btn all active" id="cityAll" onclick="setCity('All')">All India</button>
+        <button class="city-btn" id="cityBengaluru" onclick="setCity('Bengaluru')">Bengaluru</button>
+        <button class="city-btn" id="cityChennai" onclick="setCity('Chennai')">Chennai</button>
+        <button class="city-btn" id="cityHyderabad" onclick="setCity('Hyderabad')">Hyderabad</button>
+        <button class="city-btn" id="cityDelhi" onclick="setCity('Delhi (NCR)')">Delhi (NCR)</button>
+      </div>
+
+      <div class="chips-label">Quick search</div>
       <div class="chips">
         <span class="chip" onclick="quick('Glossy white paper 230 gsm A4')">Glossy white 230gsm</span>
         <span class="chip" onclick="quick('Matte coated paper 170 gsm')">Matte coated 170gsm</span>
         <span class="chip" onclick="quick('Bond paper 80 gsm A4')">Bond A4 80gsm</span>
         <span class="chip" onclick="quick('Art paper 300 gsm')">Art paper 300gsm</span>
-        <span class="chip" onclick="quick('Kraft paper 120 gsm bulk')">Kraft paper 120gsm</span>
+        <span class="chip" onclick="quick('Kraft paper 120 gsm bulk')">Kraft 120gsm</span>
         <span class="chip" onclick="quick('Offset printing paper 90 gsm')">Offset 90gsm</span>
-        <span class="chip" onclick="quick('Newsprint paper roll')">Newsprint roll</span>
+        <span class="chip" onclick="quick('Thermal paper roll 80mm')">Thermal roll 80mm</span>
+        <span class="chip" onclick="quick('Corrugated box 5 ply')">Corrugated box</span>
       </div>
     </div>
 
-    <div class="status" id="statusBar"></div>
+    <div class="status-bar" id="statusBar"></div>
     <div id="errArea"></div>
     <div id="resArea">
       <div class="empty">
-        <i class="ti ti-file-search" aria-hidden="true"></i>
-        <p>Search for any paper type to see vendors &amp; prices.</p>
+        <span class="empty-icon"><i class="ti ti-building-store"></i></span>
+        <p>Enter any material specification above.<br>Get live vendor prices, addresses &amp; contacts across India.</p>
       </div>
     </div>
-
   </div>
 
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="side-box">
-      <div class="side-title"><i class="ti ti-history" aria-hidden="true"></i> Recent Searches</div>
+      <div class="side-title"><i class="ti ti-history" style="color:var(--purple)"></i> Recent Searches</div>
       <div id="histList"><p class="h-empty">No searches yet.</p></div>
       <button class="btn-clear" onclick="clearHist()">Clear history</button>
     </div>
+  </div>
+</div>
+</div>
 
-    <div class="side-box">
-      <div class="side-title"><i class="ti ti-info-circle" aria-hidden="true"></i> About this tool</div>
-      <div style="font-size:12px; color:var(--text2); line-height:1.6;">
-        Uses <b>Google Gemini 2.5 Flash</b> with live web search.<br><br>
-        <b>Free limits:</b><br>
-        • 1,500 searches/day<br>
-        • No credit card ever<br>
-        • No expiry<br><br>
-        Results are sourced live from the web — prices reflect current market listings.
-      </div>
+<!-- SETTINGS -->
+<div class="view" id="viewSettings">
+<div class="settings-page">
+  <div class="settings-header">
+    <h2>Settings</h2>
+    <p>Configure your API key and preferences</p>
+  </div>
+
+  <div class="settings-section">
+    <div class="sec-title"><i class="ti ti-key"></i> Gemini API Key</div>
+    <div class="key-status-lg no" id="keyStatusLg"><i class="ti ti-alert-circle"></i> No API key saved</div>
+    <div class="field" style="margin-top:1rem;">
+      <label>Paste your Google Gemini API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="AIza…"/>
+    </div>
+    <div class="key-actions">
+      <button class="btn-primary" onclick="saveKey()"><i class="ti ti-device-floppy"></i> Save Key</button>
+      <button class="btn-danger" onclick="deleteKey()"><i class="ti ti-trash"></i> Delete Key</button>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-top:10px;">Your key is stored only in your browser (localStorage). Never uploaded anywhere.</div>
+  </div>
+
+  <div class="settings-section">
+    <div class="sec-title"><i class="ti ti-info-circle"></i> How to get a Free API Key</div>
+    <div class="setup-steps">
+      <div class="step-item"><div class="step-num">1</div><div class="step-text">Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-text">Sign in with your <b>Gmail</b> account — no credit card needed</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-text">Click <b>"Create API key"</b> and copy the key</div></div>
+      <div class="step-item"><div class="step-num">4</div><div class="step-text">Paste it in the field above and click <b>Save Key</b></div></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="sec-title"><i class="ti ti-chart-bar"></i> Free Tier Limits</div>
+    <div class="info-grid">
+      <div class="info-item"><div class="val">1,500</div><div class="lbl">Searches / day</div></div>
+      <div class="info-item"><div class="val">₹0</div><div class="lbl">Cost — forever free</div></div>
+      <div class="info-item"><div class="val">Never</div><div class="lbl">Expires</div></div>
+      <div class="info-item"><div class="val">Live</div><div class="lbl">Google web search</div></div>
     </div>
   </div>
 </div>
+</div>
 
 <script>
-  let hist = JSON.parse(localStorage.getItem('ppf_hist') || '[]');
-  let lastRes = [];
+let hist=JSON.parse(localStorage.getItem('ppf_hist')||'[]');
+let lastRes=[];
+let activeCity='All';
 
-  window.onload = () => {
-    const k = localStorage.getItem('ppf_key');
-    if (k) { document.getElementById('apiKey').value = k; setKeyStatus(true); }
-    renderHist();
-  };
+window.addEventListener('load',()=>{
+  setTimeout(()=>{document.getElementById('splash').classList.add('hide');checkKey();},2200);
+});
 
-  function saveKey() {
-    const k = document.getElementById('apiKey').value.trim();
-    if (!k) return alert('Please paste your Gemini API key first.');
-    localStorage.setItem('ppf_key', k);
-    setKeyStatus(true);
-  }
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.hdr-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  document.getElementById('btn'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  if(v==='settings')syncSettingsUI();
+}
 
-  function setKeyStatus(ok) {
-    const el = document.getElementById('keyStatus');
-    el.className = 'key-status ' + (ok ? 'ok' : 'no');
-    el.innerHTML = ok
-      ? '<i class="ti ti-circle-check"></i> Key saved'
-      : '<i class="ti ti-alert-circle"></i> Not set';
-  }
+function checkKey(){
+  const k=localStorage.getItem('ppf_key');
+  const dot=document.getElementById('keyDot');
+  const banner=document.getElementById('noKeyBanner');
+  if(k){dot.className='key-dot ok';banner.style.display='none';}
+  else{dot.className='key-dot no';banner.style.display='flex';}
+}
 
-  function quick(t) { document.getElementById('qInput').value = t; doSearch(); }
+function syncSettingsUI(){
+  const k=localStorage.getItem('ppf_key');
+  const el=document.getElementById('keyStatusLg');
+  if(k){el.className='key-status-lg ok';el.innerHTML='<i class="ti ti-circle-check"></i> API key is saved and active';document.getElementById('apiKeyInput').value=k;}
+  else{el.className='key-status-lg no';el.innerHTML='<i class="ti ti-alert-circle"></i> No API key saved';}
+}
 
-  async function doSearch() {
-    const q = document.getElementById('qInput').value.trim();
-    if (!q) return alert('Please type a paper specification.');
+function saveKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(!k){alert('Please paste your API key first.');return;}
+  localStorage.setItem('ppf_key',k);syncSettingsUI();checkKey();
+  alert('✓ API key saved! You can now search for prices.');
+}
 
-    const key = localStorage.getItem('ppf_key') || document.getElementById('apiKey').value.trim();
-    if (!key) return alert('Please enter and save your Google Gemini API key first.\nGet it free at: aistudio.google.com/apikey');
+function deleteKey(){
+  if(!confirm('Delete the saved API key?'))return;
+  localStorage.removeItem('ppf_key');document.getElementById('apiKeyInput').value='';syncSettingsUI();checkKey();
+}
 
-    const btn = document.getElementById('searchBtn');
-    const statusBar = document.getElementById('statusBar');
-    const errArea = document.getElementById('errArea');
-    const resArea = document.getElementById('resArea');
+function setCity(city){
+  activeCity=city;
+  document.querySelectorAll('.city-btn').forEach(b=>b.classList.remove('active'));
+  const id='city'+city.replace(/[^a-zA-Z]/g,'');
+  const btn=document.getElementById(id);
+  if(btn)btn.classList.add('active');
+}
 
-    btn.disabled = true;
-    errArea.innerHTML = '';
-    resArea.innerHTML = '';
-    statusBar.innerHTML = `<div class="spin"></div> Searching for <strong>"${esc(q)}"</strong> across Indian vendors...`;
+function quick(t){document.getElementById('qInput').value=t;doSearch();}
 
-    try {
-      const body = {
-        contents: [{
-          parts: [{ text: `Find Indian vendors selling: "${q}"
-Search the web now and return ONLY a JSON array — no markdown, no explanation, no backtick fences.
-Format exactly:
-[{"vendorName":"Full name","price":"Amount with unit e.g. ₹450 per ream or Contact for quote","address":"City and State","contact":"Phone or email or Not listed","website":"https://url or empty","notes":"Min order, GSM availability, etc. Empty if none"}]
-Find 4-6 vendors. Only list prices you actually found on the web. Focus on Bengaluru, Mumbai, Delhi, Chennai suppliers. Return ONLY the JSON array.` }]
-        }],
-        tools: [{ google_search: {} }],
-        generationConfig: { temperature: 0.1 }
-      };
+async function doSearch(){
+  const q=document.getElementById('qInput').value.trim();
+  if(!q){alert('Please enter a material to search.');return;}
+  const key=localStorage.getItem('ppf_key');
+  if(!key){showView('settings');return;}
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-      );
+  const btn=document.getElementById('searchBtn');
+  const statusBar=document.getElementById('statusBar');
+  const errArea=document.getElementById('errArea');
+  const resArea=document.getElementById('resArea');
 
-      const data = await res.json();
+  btn.disabled=true;errArea.innerHTML='';
+  const cityLabel=activeCity==='All'?'across India':`in ${activeCity}`;
+  resArea.innerHTML=`<div class="scan-wrap">
+    <div class="scan-ring"><i class="ti ti-world-search"></i></div>
+    <div class="scan-text">Scanning vendors ${cityLabel}…</div>
+    <div class="scan-steps">
+      <div class="scan-step active" id="ss1"><i class="ti ti-loader"></i> Querying live web data…</div>
+      <div class="scan-step" id="ss2"><i class="ti ti-building-store"></i> Finding vendors…</div>
+      <div class="scan-step" id="ss3"><i class="ti ti-currency-rupee"></i> Extracting prices…</div>
+    </div></div>`;
+  statusBar.innerHTML='';
 
-      if (!res.ok) {
-        const msg = data?.error?.message || `API error ${res.status}`;
-        throw new Error(msg);
-      }
+  setTimeout(()=>{
+    const s1=document.getElementById('ss1'),s2=document.getElementById('ss2');
+    if(s1){s1.classList.remove('active');s1.classList.add('done');s1.querySelector('i').className='ti ti-check';}
+    if(s2)s2.classList.add('active');
+  },900);
+  setTimeout(()=>{
+    const s2=document.getElementById('ss2'),s3=document.getElementById('ss3');
+    if(s2){s2.classList.remove('active');s2.classList.add('done');s2.querySelector('i').className='ti ti-check';}
+    if(s3)s3.classList.add('active');
+  },1800);
 
-      const raw = (data?.candidates?.[0]?.content?.parts || [])
-        .filter(p => p.text)
-        .map(p => p.text)
-        .join('');
+  const cityInstr=activeCity==='All'
+    ?'Focus on major Indian cities: Bengaluru, Mumbai, Delhi, Chennai, Hyderabad.'
+    :`Focus ONLY on vendors located in ${activeCity}. Only return vendors from ${activeCity}.`;
 
-      const cleaned = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
-      let vendors = [];
-      try { vendors = JSON.parse(cleaned); }
-      catch {
-        const m = cleaned.match(/\[[\s\S]*\]/);
-        if (m) vendors = JSON.parse(m[0]);
-        else throw new Error('Could not parse vendor results. Try a more specific search.');
-      }
-
-      lastRes = vendors;
-      addHist(q);
-      renderResults(vendors, q);
-      statusBar.innerHTML = `<i class="ti ti-circle-check" style="color:var(--success)"></i>&nbsp;Found <strong>${vendors.length} vendor${vendors.length!==1?'s':''}</strong> for "${esc(q)}"`;
-
-    } catch(e) {
-      statusBar.innerHTML = '';
-      errArea.innerHTML = `<div class="err"><i class="ti ti-alert-circle" style="flex-shrink:0;margin-top:1px"></i><div>${esc(e.message)}</div></div>`;
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  function renderResults(vendors, q) {
-    const area = document.getElementById('resArea');
-    if (!vendors?.length) {
-      area.innerHTML = `<div class="empty"><i class="ti ti-mood-sad"></i><p>No vendors found for "${esc(q)}". Try different keywords.</p></div>`;
-      return;
-    }
-
-    let html = `<div class="results-head"><span>${vendors.length} vendor${vendors.length!==1?'s':''} found</span><button class="btn-csv" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Export CSV</button></div><div class="grid">`;
-
-    vendors.forEach(v => {
-      const hasUrl = v.website && v.website.trim() && v.website !== 'Not listed' && v.website.startsWith('http');
-      html += `<div class="card">
-        <div class="c-head">
-          <div class="c-name">${esc(v.vendorName||'Unknown Vendor')}</div>
-          <div class="c-price">${esc(v.price||'N/A')}</div>
-        </div>
-        <div class="c-div"></div>
-        <div class="c-row"><i class="ti ti-map-pin" aria-hidden="true"></i><span>${esc(v.address||'Not listed')}</span></div>
-        <div class="c-row"><i class="ti ti-phone" aria-hidden="true"></i><span class="${v.contact&&v.contact!=='Not listed'?'hi':''}">${esc(v.contact||'Not listed')}</span></div>
-        ${v.notes?`<div class="c-note"><i class="ti ti-info-circle" style="font-size:11px;margin-right:3px"></i>${esc(v.notes)}</div>`:''}
-        ${hasUrl?`<div class="c-foot"><a class="c-link" href="${esc(v.website)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Visit website</a></div>`:''}
-      </div>`;
-    });
-
-    area.innerHTML = html + '</div>';
-  }
-
-  function exportCSV() {
-    if (!lastRes.length) return;
-    const hdr = ['Vendor Name','Price','Address','Contact','Website','Notes'];
-    const rows = lastRes.map(v =>
-      [v.vendorName,v.price,v.address,v.contact,v.website,v.notes]
-      .map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')
+  try{
+    const body={
+      contents:[{parts:[{text:`Find vendors selling: "${q}"
+Search the web now. ${cityInstr}
+Return ONLY a valid JSON array — no markdown, no backticks, no explanation.
+Format:
+[{"vendorName":"Full name","price":"₹amount with unit or Contact for quote","address":"Full city and state","contact":"Phone or email or Not listed","website":"https://url or empty string","notes":"Min order, variants, delivery info. Empty string if none"}]
+Find 4-6 vendors. Only list prices actually found. Return ONLY the JSON array.`}]}],
+      tools:[{google_search:{}}],
+      generationConfig:{temperature:0.1}
+    };
+    const res=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}
     );
-    const blob = new Blob([[hdr.join(','),...rows].join('\n')],{type:'text/csv'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `paper_prices_${Date.now()}.csv`;
-    a.click();
-  }
+    const data=await res.json();
+    if(!res.ok)throw new Error(data?.error?.message||`API error ${res.status}`);
 
-  function addHist(q) {
-    hist = [q,...hist.filter(h=>h!==q)].slice(0,15);
-    localStorage.setItem('ppf_hist', JSON.stringify(hist));
-    renderHist();
-  }
+    const raw=(data?.candidates?.[0]?.content?.parts||[]).filter(p=>p.text).map(p=>p.text).join('');
+    const cleaned=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+    let vendors=[];
+    try{vendors=JSON.parse(cleaned);}
+    catch{const m=cleaned.match(/\[[\s\S]*\]/);if(m)vendors=JSON.parse(m[0]);else throw new Error('Could not parse results. Try a more specific query.');}
 
-  function renderHist() {
-    const el = document.getElementById('histList');
-    if (!hist.length) { el.innerHTML = '<p class="h-empty">No searches yet.</p>'; return; }
-    el.innerHTML = hist.map(q=>`<div class="h-item" onclick="quick(${JSON.stringify(q)})"><i class="ti ti-clock"></i>${esc(q)}</div>`).join('');
-  }
+    lastRes=vendors;addHist(q);renderResults(vendors,q);
+    statusBar.innerHTML=`<i class="ti ti-circle-check" style="color:var(--success)"></i>&nbsp;Found <strong>${vendors.length} vendor${vendors.length!==1?'s':''}</strong> for "<strong>${esc(q)}</strong>" ${cityLabel}`;
+  }catch(e){
+    resArea.innerHTML='';
+    errArea.innerHTML=`<div class="err"><i class="ti ti-alert-circle" style="flex-shrink:0;margin-top:1px;"></i><div>${esc(e.message)}</div></div>`;
+    statusBar.innerHTML='';
+  }finally{btn.disabled=false;}
+}
 
-  function clearHist() {
-    hist = [];
-    localStorage.removeItem('ppf_hist');
-    renderHist();
+function renderResults(vendors,q){
+  const area=document.getElementById('resArea');
+  if(!vendors?.length){
+    area.innerHTML=`<div class="empty"><span class="empty-icon"><i class="ti ti-mood-sad"></i></span><p>No vendors found for "<strong>${esc(q)}</strong>".<br>Try broader keywords or switch to All India.</p></div>`;
+    return;
   }
+  let html=`<div class="results-head"><div class="results-count"><span class="badge">${vendors.length}</span> vendor${vendors.length!==1?'s':''} found</div><button class="btn-csv" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button></div><div class="grid">`;
+  vendors.forEach((v,i)=>{
+    const hasUrl=v.website?.trim()&&v.website!=='Not listed'&&v.website.startsWith('http');
+    html+=`<div class="card" style="animation-delay:${i*60}ms">
+      <div class="c-head"><div class="c-name">${esc(v.vendorName||'Unknown Vendor')}</div><div class="c-price">${esc(v.price||'N/A')}</div></div>
+      <div class="c-div"></div>
+      <div class="c-row"><i class="ti ti-map-pin"></i><span>${esc(v.address||'Not listed')}</span></div>
+      <div class="c-row"><i class="ti ti-phone"></i><span class="${v.contact&&v.contact!=='Not listed'?'hi':''}">${esc(v.contact||'Not listed')}</span></div>
+      ${v.notes?`<div class="c-note"><i class="ti ti-info-circle" style="font-size:11px;margin-right:4px;"></i>${esc(v.notes)}</div>`:''}
+      ${hasUrl?`<div class="c-foot"><a class="c-link" href="${esc(v.website)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> Visit website</a></div>`:''}
+    </div>`;
+  });
+  area.innerHTML=html+'</div>';
+}
 
-  function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+function exportCSV(){
+  if(!lastRes.length)return;
+  const hdr=['Vendor Name','Price','Address','Contact','Website','Notes'];
+  const rows=lastRes.map(v=>[v.vendorName,v.price,v.address,v.contact,v.website,v.notes].map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(','));
+  const blob=new Blob([[hdr.join(','),...rows].join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`vendors_${Date.now()}.csv`;a.click();
+}
 
-  document.getElementById('qInput').addEventListener('keydown', e => { if(e.key==='Enter') doSearch(); });
+function addHist(q){hist=[q,...hist.filter(h=>h!==q)].slice(0,15);localStorage.setItem('ppf_hist',JSON.stringify(hist));renderHist();}
+function renderHist(){
+  const el=document.getElementById('histList');
+  if(!hist.length){el.innerHTML='<p class="h-empty">No searches yet.</p>';return;}
+  el.innerHTML=hist.map(q=>`<div class="h-item" onclick="quick(${JSON.stringify(q)})"><i class="ti ti-clock"></i>${esc(q)}</div>`).join('');
+}
+function clearHist(){hist=[];localStorage.removeItem('ppf_hist');renderHist();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+document.getElementById('qInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
 </script>
 </body>
 </html>
