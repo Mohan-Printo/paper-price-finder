@@ -21,6 +21,15 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 .bg-pattern{position:fixed;inset:0;z-index:0;background-image:radial-gradient(circle,rgba(91,45,142,0.04) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+/* ── Offset press background ── */
+.bg-press{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:760px;max-width:96vw;z-index:0;pointer-events:none;opacity:0.06;transition:opacity .8s ease;}
+.bg-press.dim{opacity:0.03;}
+@keyframes rollerSpin{to{transform:rotate(360deg);}}
+@keyframes pressFeed{0%{transform:translateX(-40px);opacity:0;}18%{opacity:1;}100%{transform:translateX(150px);opacity:0;}}
+@media (prefers-reduced-motion: reduce){
+  .press-roller{animation:none!important;}
+  .press-sheet{animation:none!important;opacity:.6;}
+}
 .bg-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;}
 .bg-orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(91,45,142,0.07) 0%,transparent 70%);top:-180px;left:-180px;animation:orbF1 14s ease-in-out infinite;}
 .bg-orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 70%);bottom:-120px;right:-120px;animation:orbF2 18s ease-in-out infinite;}
@@ -28,7 +37,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 @keyframes orbF2{0%,100%{transform:translate(0,0);}50%{transform:translate(-20px,-30px);}}
 
 /* Splash */
-#splash{position:fixed;inset:0;z-index:1000;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s,visibility .5s;}
+#splash{position:fixed;inset:0;z-index:1000;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s,visibility .5s;overflow:hidden;}
+.splash-press{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:820px;max-width:96vw;z-index:0;pointer-events:none;opacity:0.16;}
+#splash > *:not(.splash-press){position:relative;z-index:1;}
 #splash.hide{opacity:0;visibility:hidden;}
 .splash-ring{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--orange));display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;animation:spB 1.4s ease-in-out infinite;}
 .splash-title{font-size:20px;font-weight:800;color:var(--purple);}
@@ -247,10 +258,59 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backd
 <div class="bg-orb bg-orb1"></div>
 <div class="bg-orb bg-orb2"></div>
 
+<svg class="bg-press" id="bgPress" viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <rect x="40" y="55" width="300" height="130" rx="14" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+  <rect x="62" y="128" width="150" height="44" rx="6" fill="#5B2D8E" opacity="0.06"/>
+  <text x="137" y="152" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="800" fill="#5B2D8E">Printo</text>
+  <text x="137" y="167" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="500" fill="#F97316" letter-spacing="0.5">easy, one-stop printing</text>
+  <text x="262" y="96" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="600" fill="#F97316" letter-spacing="2">OFFSET PRESS</text>
+  <g class="press-roller" style="transform-origin:108px 100px;animation:rollerSpin 6s linear infinite;">
+    <circle cx="108" cy="100" r="30" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+    <line x1="108" y1="70" x2="108" y2="130" stroke="#5B2D8E" stroke-width="1.3"/>
+    <line x1="78" y1="100" x2="138" y2="100" stroke="#5B2D8E" stroke-width="1.3"/>
+    <line x1="87" y1="79" x2="129" y2="121" stroke="#5B2D8E" stroke-width="0.9"/>
+    <line x1="129" y1="79" x2="87" y2="121" stroke="#5B2D8E" stroke-width="0.9"/>
+  </g>
+  <g class="press-roller" style="transform-origin:200px 100px;animation:rollerSpin 4s linear infinite reverse;">
+    <circle cx="200" cy="100" r="22" fill="none" stroke="#F97316" stroke-width="2.5"/>
+    <line x1="200" y1="78" x2="200" y2="122" stroke="#F97316" stroke-width="1.3"/>
+    <line x1="178" y1="100" x2="222" y2="100" stroke="#F97316" stroke-width="1.3"/>
+  </g>
+  <g class="press-roller" style="transform-origin:268px 100px;animation:rollerSpin 5s linear infinite;">
+    <circle cx="268" cy="100" r="17" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+    <line x1="268" y1="83" x2="268" y2="117" stroke="#5B2D8E" stroke-width="1"/>
+  </g>
+  <rect class="press-sheet" x="120" y="202" width="90" height="12" rx="2" fill="#F97316" opacity="0.4" style="animation:pressFeed 5s ease-in-out infinite;"/>
+</svg>
+
 <div id="splash">
+  <svg class="splash-press" viewBox="0 0 380 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="40" y="55" width="300" height="130" rx="14" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+    <rect x="62" y="128" width="150" height="44" rx="6" fill="#5B2D8E" opacity="0.06"/>
+    <text x="137" y="152" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="800" fill="#5B2D8E">Printo</text>
+    <text x="137" y="167" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="500" fill="#F97316" letter-spacing="0.5">easy, one-stop printing</text>
+    <text x="262" y="96" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="600" fill="#F97316" letter-spacing="2">OFFSET PRESS</text>
+    <g class="press-roller" style="transform-origin:108px 100px;animation:rollerSpin 6s linear infinite;">
+      <circle cx="108" cy="100" r="30" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+      <line x1="108" y1="70" x2="108" y2="130" stroke="#5B2D8E" stroke-width="1.3"/>
+      <line x1="78" y1="100" x2="138" y2="100" stroke="#5B2D8E" stroke-width="1.3"/>
+      <line x1="87" y1="79" x2="129" y2="121" stroke="#5B2D8E" stroke-width="0.9"/>
+      <line x1="129" y1="79" x2="87" y2="121" stroke="#5B2D8E" stroke-width="0.9"/>
+    </g>
+    <g class="press-roller" style="transform-origin:200px 100px;animation:rollerSpin 4s linear infinite reverse;">
+      <circle cx="200" cy="100" r="22" fill="none" stroke="#F97316" stroke-width="2.5"/>
+      <line x1="200" y1="78" x2="200" y2="122" stroke="#F97316" stroke-width="1.3"/>
+      <line x1="178" y1="100" x2="222" y2="100" stroke="#F97316" stroke-width="1.3"/>
+    </g>
+    <g class="press-roller" style="transform-origin:268px 100px;animation:rollerSpin 5s linear infinite;">
+      <circle cx="268" cy="100" r="17" fill="none" stroke="#5B2D8E" stroke-width="2.5"/>
+      <line x1="268" y1="83" x2="268" y2="117" stroke="#5B2D8E" stroke-width="1"/>
+    </g>
+    <rect class="press-sheet" x="120" y="202" width="90" height="12" rx="2" fill="#F97316" opacity="0.4" style="animation:pressFeed 5s ease-in-out infinite;"/>
+  </svg>
   <div class="splash-ring"><i class="ti ti-receipt-2"></i></div>
   <div class="splash-title">Material Price &amp; <span>Vendor Finder</span></div>
-  <div class="splash-sub">Printo India </div>
+  <div class="splash-sub">AI + Web Scraper</div>
   <div class="splash-bar"><div class="splash-fill"></div></div>
 </div>
 
@@ -292,7 +352,7 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backd
       <div class="mode-tabs">
         <button class="mode-tab active" id="tabAI" onclick="setMode('ai')">
           <i class="ti ti-sparkles"></i>
-          <span class="tab-label">Printo LLM </span>
+          <span class="tab-label">Printo LLM</span>
           <span class="tag ai-tag">Fast · 3–6</span>
         </button>
         <button class="mode-tab" id="tabScraper" onclick="setMode('scraper')">
@@ -317,8 +377,8 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backd
       <!-- Limit selector (scraper only) -->
       <div class="limit-row" id="limitRow" style="display:none;">
         <span class="filter-label"><i class="ti ti-list-numbers" style="font-size:13px;color:var(--purple)"></i> Max vendors:</span>
-        <button class="limit-btn" onclick="setLimit(10)" id="lim10">10</button>
-        <button class="limit-btn active" onclick="setLimit(15)" id="lim15">15</button>
+        <button class="limit-btn active" onclick="setLimit(10)" id="lim10">10</button>
+        <button class="limit-btn" onclick="setLimit(15)" id="lim15">15</button>
         <button class="limit-btn" onclick="setLimit(20)" id="lim20">20</button>
         <button class="limit-btn" onclick="setLimit(30)" id="lim30">30</button>
         <button class="limit-btn" onclick="setLimit(40)" id="lim40">40</button>
@@ -477,7 +537,7 @@ let hist=JSON.parse(localStorage.getItem('ppf_hist')||'[]');
 let lastRes=[];
 let activeCity='All';
 let activeMode='ai';
-let activeLimit=15;
+let activeLimit=100;
 let scraperOnline=false;
 let stats={ai:0,sc:0,vendors:0};
 
@@ -759,6 +819,8 @@ Find 4-6 vendors. Return ONLY the JSON array.`}]}],
 // ── Render results ──
 function renderResults(vendors,q){
   const area=document.getElementById('resArea');
+  const press=document.getElementById('bgPress');
+  if(press) press.classList.add('dim');
   if(!vendors?.length){
     area.innerHTML=`<div class="empty"><span class="empty-icon"><i class="ti ti-mood-sad"></i></span><p>No vendors found. Try different keywords or switch search mode.</p></div>`;
     return;
@@ -828,4 +890,3 @@ document.getElementById('qInput').addEventListener('keydown',e=>{if(e.key==='Ent
 </script>
 </body>
 </html>
-
