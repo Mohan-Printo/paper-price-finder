@@ -183,6 +183,10 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backd
 .c-name{font-size:14px;font-weight:700;line-height:1.3;color:var(--text);}
 .c-price{font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--purple-pale),var(--orange-pale));color:var(--purple);border:1px solid rgba(91,45,142,.2);padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
 .c-source{font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;margin-bottom:8px;display:inline-block;}
+.dist-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:3px;}
+.dist-high{background:#dcfce7;color:#16a34a;}
+.dist-med{background:#fef3c7;color:#b45309;}
+.dist-low{background:#f1f0eb;color:#9b8ec0;}
 .src-google{background:#e8f0fe;color:#1a56db;}
 .src-indiamart{background:#fff7e6;color:#d97706;}
 .src-tradeindia{background:#f0fdf4;color:#16a34a;}
@@ -406,6 +410,13 @@ header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.92);backd
         <button class="city-btn" id="cityDelhi" onclick="setCity('Delhi (NCR)')">Delhi (NCR)</button>
       </div>
 
+      <div class="filter-row">
+        <span class="filter-label"><i class="ti ti-building-warehouse" style="font-size:13px;color:var(--purple)"></i> Vendor type:</span>
+        <button class="city-btn active" id="vtAll" onclick="setVendorType(false)">All vendors</button>
+        <button class="city-btn" id="vtDist" onclick="setVendorType(true)">Distributors &amp; wholesalers only</button>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px;">excludes marketplaces</span>
+      </div>
+
       <div class="chips-label">Quick search</div>
       <div class="chips">
         <span class="chip" onclick="quick('Glossy white paper 230 gsm A4')">Glossy white 230gsm</span>
@@ -537,8 +548,15 @@ let lastRes=[];
 let activeCity='All';
 let activeMode='ai';
 let activeLimit=100;
+let activeDistOnly=false;
 let scraperOnline=false;
 let stats={ai:0,sc:0,vendors:0};
+
+function setVendorType(distOnly){
+  activeDistOnly=distOnly;
+  document.getElementById('vtAll').classList.toggle('active',!distOnly);
+  document.getElementById('vtDist').classList.toggle('active',distOnly);
+}
 
 const SCRAPER_URL='http://localhost:5000';
 
@@ -737,7 +755,7 @@ async function doSearch(){
       },1800);
 
       const serperKey=localStorage.getItem('ppf_serper')||'';
-      const resp=await fetch(`${SCRAPER_URL}/scrape?q=${encodeURIComponent(q)}&city=${encodeURIComponent(activeCity)}&limit=${activeLimit}&serper_key=${encodeURIComponent(serperKey)}`);
+      const resp=await fetch(`${SCRAPER_URL}/scrape?q=${encodeURIComponent(q)}&city=${encodeURIComponent(activeCity)}&limit=${activeLimit}&serper_key=${encodeURIComponent(serperKey)}&distributors_only=${activeDistOnly?'1':'0'}`);
       clearInterval(stepTimer);
 
       if(!resp.ok) throw new Error(`Scraper error ${resp.status}`);
@@ -792,11 +810,15 @@ async function doSearch(){
 async function runGemini(q,city){
   const key=localStorage.getItem('ppf_key');
   const cityInstr=city==='All'?'Focus on Bengaluru, Mumbai, Delhi, Chennai, Hyderabad.':`Focus ONLY on vendors in ${city}.`;
+  const distInstr=activeDistOnly
+    ? 'IMPORTANT: Return ONLY genuine distributors, wholesalers, authorised dealers, importers, or manufacturers. DO NOT include marketplaces (IndiaMART, JustDial, TradeIndia, Sulekha), retailers, Amazon, or Flipkart. For each vendor set "distributor" to "High", "Medium", or "Low" based on how clearly it is a distributor/wholesaler.'
+    : 'For each vendor set "distributor" to "High", "Medium", or "Low" based on whether it looks like a distributor/wholesaler (High) or a shop/retailer (Low).';
   const body={
     contents:[{parts:[{text:`Find vendors selling: "${q}"
 Search the web. ${cityInstr}
+${distInstr}
 Return ONLY a JSON array — no markdown, no backticks.
-[{"vendorName":"name","price":"₹amount or Contact for quote","address":"city,state","contact":"phone/email or Not listed","website":"https://url or empty","notes":"details or empty"}]
+[{"vendorName":"name","price":"₹amount or Contact for quote","address":"city,state","contact":"phone/email or Not listed","website":"https://url or empty","notes":"details or empty","distributor":"High|Medium|Low"}]
 Find 4-6 vendors. Return ONLY the JSON array.`}]}],
     tools:[{google_search:{}}],
     generationConfig:{temperature:0.1}
@@ -812,6 +834,13 @@ Find 4-6 vendors. Return ONLY the JSON array.`}]}],
   let vendors=[];
   try{vendors=JSON.parse(cleaned);}
   catch{const m=cleaned.match(/\[[\s\S]*\]/);if(m)vendors=JSON.parse(m[0]);}
+  // If distributors-only is on, drop Low-likelihood AI results too
+  if(activeDistOnly){
+    vendors=vendors.filter(v=>{
+      const d=(v.distributor||'').toLowerCase();
+      return d==='high'||d==='medium';
+    });
+  }
   return vendors;
 }
 
@@ -842,9 +871,14 @@ function renderResults(vendors,q){
     const hasUrl=v.website?.trim()&&v.website!=='Not listed'&&v.website.startsWith('http');
     const src=v.source||'';
     const srcClass=src.includes('Google')?'src-google':src.includes('IndiaMART')?'src-indiamart':src.includes('TradeIndia')?'src-tradeindia':src.includes('JustDial')?'src-justdial':src.includes('Sulekha')?'src-sulekha':'src-gemini';
+    const dist=(v.distributor||'').toLowerCase();
+    let distBadge='';
+    if(dist==='high') distBadge=`<span class="dist-badge dist-high"><i class="ti ti-circle-check" style="font-size:10px"></i> Distributor</span>`;
+    else if(dist==='medium') distBadge=`<span class="dist-badge dist-med"><i class="ti ti-help-circle" style="font-size:10px"></i> Likely distributor</span>`;
+    else if(dist==='low') distBadge=`<span class="dist-badge dist-low"><i class="ti ti-building-store" style="font-size:10px"></i> Unverified</span>`;
     html+=`<div class="card" style="animation-delay:${i*50}ms" data-source="${src}">
       <div class="c-head"><div class="c-name">${esc(v.vendorName||'Unknown Vendor')}</div><div class="c-price">${esc(v.price||'N/A')}</div></div>
-      <span class="c-source ${srcClass}">${esc(src||'AI')}</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;"><span class="c-source ${srcClass}" style="margin-bottom:0">${esc(src||'AI')}</span>${distBadge}</div>
       <div class="c-div"></div>
       <div class="c-row"><i class="ti ti-map-pin"></i><span>${esc(v.address||'Not listed')}</span></div>
       <div class="c-row"><i class="ti ti-phone"></i><span class="${v.contact&&v.contact!=='Not listed'&&v.contact!=='Visit website'?'hi':''}">${esc(v.contact||'Not listed')}</span></div>
@@ -871,8 +905,8 @@ function updateStats(){
 
 function exportCSV(){
   if(!lastRes.length)return;
-  const hdr=['Vendor Name','Price','Address','Contact','Website','Source','Notes'];
-  const rows=lastRes.map(v=>[v.vendorName,v.price,v.address,v.contact,v.website,v.source,v.notes].map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(','));
+  const hdr=['Vendor Name','Price','Address','Contact','Website','Source','Distributor','Notes'];
+  const rows=lastRes.map(v=>[v.vendorName,v.price,v.address,v.contact,v.website,v.source,v.distributor,v.notes].map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(','));
   const blob=new Blob([[hdr.join(','),...rows].join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`vendors_${Date.now()}.csv`;a.click();
 }
